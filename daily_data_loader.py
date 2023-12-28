@@ -48,7 +48,7 @@ def load_predict_probs(csv_file_path):
     
     return data
 
-def create_datasets(daily_data_root):
+def create_random_splited_dataloaders(daily_data_root):
     data_paths = [os.path.join(daily_data_root, class_dir) for class_dir in os.listdir(daily_data_root) if os.path.exists(os.path.join(daily_data_root, class_dir))]
     
     X = []
@@ -69,18 +69,44 @@ def create_datasets(daily_data_root):
     Y = torch.tensor(Y, dtype=torch.float32)
     print(f"X: {X.shape} / Y: {Y.shape}")
 
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.01, random_state=42)
     print(f"X_train: {X_train.shape} / X_test: {X_test.shape}")
     print(f"y_train: {y_train.shape} / y_test: {y_test.shape}")
 
     train_dataset = TensorDataset(X_train, y_train)
     test_dataset = TensorDataset(X_test, y_test)
 
-    train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
     return train_loader, test_loader
 
+def create_one_dataloader(daily_data_root):
+    data_paths = [os.path.join(daily_data_root, class_dir) for class_dir in os.listdir(daily_data_root) if os.path.exists(os.path.join(daily_data_root, class_dir))]
+    
+    X = []
+    Y = []
+    for data_path in data_paths:
+
+        assert data_path[-4:]==".csv" 
+
+        print(f"Loading: {data_path}")
+        labels, predicts = load_labels_predicts(data_path)
+        predict_probs = load_predict_probs(data_path)
+
+        X.append(predict_probs)
+        Y.append(labels)
+        # print(f"X: {len(X)} / Y: {len(Y)}")
+
+    X = torch.tensor(X, dtype=torch.float32)
+    Y = torch.tensor(Y, dtype=torch.float32)
+    print(f"X: {X.shape} / Y: {Y.shape}")
+
+    dataset = TensorDataset(X, Y)
+
+    loader = DataLoader(dataset, batch_size=1, shuffle=False)
+
+    return loader
 
 
 if __name__ == '__main__':
@@ -90,9 +116,10 @@ if __name__ == '__main__':
 
     # load_predict_probs(csv_file_path = "daily_assess/daily_raw_data/1112.csv")
 
-    daily_data_root = "daily_assess/daily_raw_data/"
+    daily_data_root = "daily_data/test_samples"
     train_loader, test_loader = create_datasets(daily_data_root=daily_data_root)
     
     for features, labels in train_loader:
         print(features.shape)
         print(labels.shape)
+        print(labels)
