@@ -1,1 +1,1 @@
-# Behavioral-Sequence-Refinement-BLSTM
+# Seq2Seq-Rectify-LSTM
